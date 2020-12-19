@@ -3,20 +3,10 @@ import Text.Parsec.Char (string, char, anyChar, digit)
 import Text.Parsec (parse, many1, manyTill)
 
 import Data.List.Split (splitOn)
+import Data.List (isInfixOf, deleteBy, sortOn, transpose)
 import Data.Either (rights)
-
-data Range = Range
-    { lowerBound :: Int
-    , upperBound :: Int
-    } deriving (Show)
-
-data FieldRule = FieldRule
-    { frName :: String
-    , frRange1 :: Range
-    , frRange2 :: Range
-    } deriving (Show)
-
-type Ticket = [Int]
+import Data.Function (on)
+import Data.Bifunctor (second)
 
 parseFieldRule :: Parser FieldRule
 parseFieldRule = do
@@ -42,11 +32,75 @@ parseInput s =
        , map (map read . splitOn ",") $ lines tickets
        )
 
+data Range = Range
+    { lowerBound :: Int
+    , upperBound :: Int
+    } deriving (Show)
+
+data FieldRule = FieldRule
+    { frName :: String
+    , frRange1 :: Range
+    , frRange2 :: Range
+    } deriving (Show)
+
+type Ticket = [Int]
+
+isWithin :: Int -> Range -> Bool
+isWithin x (Range rangeStart rangeEnd) = rangeStart <= x && x <= rangeEnd
+
+isValidForField :: Int -> FieldRule -> Bool
+isValidForField x field =
+    x `isWithin` frRange1 field || x `isWithin` frRange2 field
+
+isPossibleValue :: [FieldRule] -> Int -> Bool
+isPossibleValue fields value = any (isValidForField value) fields
+
+findImpossibleFields :: [FieldRule] -> Ticket -> [Int]
+findImpossibleFields fields = filter (not . isPossibleValue fields)
+
+isFieldValidForColumn :: FieldRule -> [Int] -> Bool
+isFieldValidForColumn = all . flip isValidForField
+
+-- The input list at index i is a list of all valid fields for
+-- the i-th column
+assignFieldsToColumns :: [(Int, [FieldRule])] -> [[(Int, FieldRule)]]
+assignFieldsToColumns [] = return []
+assignFieldsToColumns ((i, possibleFields):rest) = do
+    fieldForIndexI <- possibleFields
+    restOfTheAssignment <-
+        assignFieldsToColumns (removeField fieldForIndexI rest)
+
+    return $ (i, fieldForIndexI): restOfTheAssignment
+
+  where
+    removeField :: FieldRule
+                -> [(Int, [FieldRule])]
+                -> [(Int, [FieldRule])]
+    removeField _ [] = []
+    removeField f ((_, possibleFs):xs) =
+        (i, deleteBy ((==) `on` frName) f possibleFs)
+        : removeField f xs
+
 main :: IO ()
 main = do
     contents <- readFile "day16input.txt" 
     let (fields, myTicket, nearbyTickets) = parseInput contents
+        validTickets = filter (null . findImpossibleFields fields) nearbyTickets
+        cols = transpose validTickets
+        -- testField = FieldRule {frName = "departure location", frRange1 = Range {lowerBound = 44, upperBound = 401}, frRange2 = Range {lowerBound = 415 , upperBound = 965}}
+        validFields = map (\col -> [ field | field <- fields, isFieldValidForColumn field col ]) cols
+        organizedFields = sortOn (length . snd) $ zip [0..] validFields
+        assignedFieds = head
+            $ map (map (second frName))
+            $ assignFieldsToColumns organizedFields
 
-    print fields
-    print myTicket
-    print nearbyTickets
+    -- Part one:
+    -- print $ sum $ concat $ map (findImpossibleFields fields) nearbyTickets
+
+    print
+        $ product
+        $ map snd
+        $ filter (isInfixOf "departure" . fst)
+        $ flip zip myTicket
+        $ map snd
+        $ sortOn fst assignedFieds
