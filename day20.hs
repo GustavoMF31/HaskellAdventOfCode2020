@@ -206,7 +206,7 @@ main :: IO ()
 main = do
     contents <- readFile "day20input.txt"
     let tiles = map (readTile . lines) $ splitOn "\n\n" contents
-        imagePossibilities = (assembleImage 12 tiles)
+        imagePossibilities = assembleImage 12 tiles
 
     -- print $ map (map fst) $ imagePossibilities !! 2
     -- putStrLn $ showImg $ joinImages $ map (map snd) $ imagePossibilities !! 2
