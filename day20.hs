@@ -101,7 +101,7 @@ assembleImage sideLength = go [] []
             guard
                 $ fromMaybe True
                 $ flip (tileFits Top) rotatedTile
-                <$> (fmap fromJust $ atMay
+                <$> fmap fromJust (atMay
                 <$> headMay allPreviousRows
                 <*> pure (sideLength - length currentRow - 1))
 

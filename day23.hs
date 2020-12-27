@@ -2,8 +2,6 @@ import Data.Maybe (fromJust)
 import qualified Data.Sequence as Seq
 import Data.List (iterate', find)
 
-import Debug.Trace
-
 type CupCircle = Seq.Seq Int
 
 input :: CupCircle
@@ -65,7 +63,7 @@ crabMove (currentCupIndex, cups) =
         Just x -> x
 
     mDestinationCup :: Maybe Int
-    mDestinationCup = find (\cup -> not $ cup `elem` movingCups)
+    mDestinationCup = find (`notElem` movingCups)
         $ [currentCup-1,currentCup-2..1] ++ [biggestCup,biggestCup-1..1]
 
     (movingCups, rest) = cupsInMovement (currentCupIndex+1) cups

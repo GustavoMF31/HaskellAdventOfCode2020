@@ -30,8 +30,7 @@ pAllergens :: Parser [String]
 pAllergens = do
     _ <- string "contains"
     spaces
-    allergens <- many1 letter `sepBy1` (string ", ")
-    return allergens
+    many1 letter `sepBy1` string ", "
 
 foodInfosFromFood :: Food -> [FoodInfo]
 foodInfosFromFood food = (,) <$> foodAllergens food <*> pure (foodIngredients food)
@@ -88,11 +87,11 @@ main = do
     let foods = rights $ map (parse pFood "") $ lines contents
         infos = concatMap foodInfosFromFood foods
         (solved, _) = foldl processInfo (M.empty, M.empty) infos
-        ingredientOccurences = concat $ map foodIngredients foods
+        ingredientOccurences = concatMap foodIngredients foods
         contaminedIngredients = map snd $ M.toList solved
         contaminedInOrder = sortOn fst (M.toList solved)
 
-    print $ intercalate "," $ map snd $ contaminedInOrder
+    print $ intercalate "," $ map snd contaminedInOrder
 
     {-
     print solved

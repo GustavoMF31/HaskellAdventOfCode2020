@@ -81,6 +81,6 @@ main = do
         afterAfterOne = finalState IntMap.! afterOne
 
     -- print $ finalState
-    print $ (afterOne, afterAfterOne)
+    print (afterOne, afterAfterOne)
     print $ afterOne * afterAfterOne
 

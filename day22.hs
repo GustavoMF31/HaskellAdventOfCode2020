@@ -13,7 +13,7 @@ readInput = map (map read . drop 1 . lines) . splitOn "\n\n"
 playRound :: (Deck, Deck) -> GameState
 playRound ([], ys) = Won ys
 playRound (xs, []) = Won xs
-playRound ((x:xs), (y:ys))
+playRound (x:xs, y:ys)
     -- Assumes no equal cards exist
     | x > y = Active (xs ++ [x, y], ys)
     | otherwise = Active (xs, ys ++ [y, x])
@@ -30,8 +30,8 @@ playRecursiveCombat :: [(Deck, Deck)] -> (Deck, Deck) -> RCResult
 -- playRecursiveCombat _ decks | trace (show $ decks) False = undefined
 playRecursiveCombat _ (xs, []) = P1Won xs
 playRecursiveCombat _ ([], ys) = P2Won ys
-playRecursiveCombat history ((x:xs), (y:ys))
-    | ((x:xs), (y:ys)) `elem` history = P1Won (x:xs)
+playRecursiveCombat history (x:xs, y:ys)
+    | (x:xs, y:ys) `elem` history = P1Won (x:xs)
     | length xs >= x && length ys >= y =
         -- Recurse
         case playRecursiveCombat [] (take x xs, take y ys) of
@@ -42,7 +42,7 @@ playRecursiveCombat history ((x:xs), (y:ys))
     | otherwise = playRecursiveCombat newHistory newDecksForP2Win
   where
     newHistory :: [(Deck, Deck)]
-    newHistory = ((x:xs), (y:ys)) : history
+    newHistory = (x:xs, y:ys) : history
 
     newDecksForP1Win :: (Deck, Deck)
     newDecksForP1Win = (xs ++ [x, y], ys)
@@ -51,7 +51,7 @@ playRecursiveCombat history ((x:xs), (y:ys))
     newDecksForP2Win = (xs, ys ++ [y, x])
 
 deckScore :: Deck -> Int
-deckScore = sum . map (uncurry (*)) . zip [1..] . reverse
+deckScore = sum . zipWith (*) [1..] . reverse
 
 deck :: RCResult -> Deck
 deck (P1Won d) = d

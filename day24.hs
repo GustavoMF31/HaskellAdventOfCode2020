@@ -1,7 +1,7 @@
 import Text.Parsec
 import Text.Parsec.String
 
-import Data.List (iterate', nub)
+import Data.List (iterate')
 import Data.Either (rights)
 import qualified Data.Set as Set
 
@@ -50,7 +50,7 @@ followPath :: HexPath -> (Int, Int)
 followPath = foldl move (0,0)
 
 insertAll :: Ord a => Set.Set a -> [a] -> Set.Set a
-insertAll s = foldl (flip Set.insert) s
+insertAll = foldl (flip Set.insert)
 
 tilesToConsiderFlipping :: TileMap -> Set.Set (Int, Int)
 tilesToConsiderFlipping s =
@@ -59,7 +59,7 @@ tilesToConsiderFlipping s =
 applyFlipRules :: Int -> Bool -> Bool
 applyFlipRules blackAdjacents isBlack
     | isBlack && (blackAdjacents == 0 || blackAdjacents > 2) = True
-    | (not isBlack) && blackAdjacents == 2 = True
+    | not isBlack && blackAdjacents == 2 = True
     | otherwise = False
 
 flipTile :: TileMap -> (Int, Int) -> TileMap
@@ -77,7 +77,7 @@ shouldFlip :: TileMap -> (Int, Int) -> Bool
 shouldFlip blackTiles tile = applyFlipRules
     (length
         $ filter id
-        $ map (flip Set.member blackTiles) (immediatlyAdjacent tile))
+        $ map (`Set.member` blackTiles) (immediatlyAdjacent tile))
 
     (Set.member tile blackTiles)
 
